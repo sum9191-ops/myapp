@@ -4,29 +4,36 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: dedicatusmyawssomeapp
+  AZURE_WEBAPP_PACKAGE_PATH: .
+  NODE_VERSION: '20.x'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # steps가 build-and-deploy와 같은 라인에 있으면 안 되고, 한 단계 안으로 들여써야 합니다.
-    steps:  
+
+    steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm install
 
       - name: Build app
-        run: npm run build
+        run: npm run build --if-present
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3  # 스크린샷 버전에 맞춰 v3로 변경 권장
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: 'dedicatusmyawssomeapp'
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
